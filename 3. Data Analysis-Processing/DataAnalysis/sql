@@ -1,0 +1,49 @@
+SELECT  transaction_date,
+        DayName(transaction_date) AS Day_name,
+        MonthName(transaction_date) AS Month_name,
+        DATE_FORMAT(transaction_time, 'HH:mm:ss') AS purchase_time, -- Fixed format string
+        DayOfMonth(transaction_date) AS day_of_Month,
+        
+        COUNT(DISTINCT transaction_id) AS Sales_Count,
+        COUNT(DISTINCT product_id) AS No_of_products,
+        COUNT(DISTINCT store_id) AS No_of_stores,
+        
+        CASE  
+            WHEN DayName(transaction_date) IN ('Sunday', 'Saturday') THEN 'Weekend' -- Ensure names match DayName output
+            ELSE 'Weekday'
+        END AS day_class,
+        
+        CASE 
+             WHEN DATE_FORMAT(transaction_time, 'HH:mm:ss') BETWEEN '00:00:00' AND '11:59:59' THEN '01. Morning'
+             WHEN DATE_FORMAT(transaction_time, 'HH:mm:ss') BETWEEN '12:00:00' AND '17:59:59' THEN '02. Afternoon'
+             WHEN DATE_FORMAT(transaction_time, 'HH:mm:ss') BETWEEN '18:00:00' AND '19:59:59' THEN '03. Evening'
+             ELSE '04. Night'
+        END AS Time_of_Day,
+
+        SUM(transaction_qty * unit_price) AS Daily_Revenue,
+
+        -- Using the raw calculation because you cannot reference an alias (Daily_Revenue) in the same SELECT level
+        CASE 
+            WHEN SUM(transaction_qty * unit_price) <= 20 THEN 'Low Spend'
+            WHEN SUM(transaction_qty * unit_price) BETWEEN 20 AND 40 THEN 'Average Spender'
+            ELSE 'High Spender'
+        END AS Spend_Level,
+
+        store_location,
+        Product_category,
+        product_type,
+        Product_detail
+
+FROM assignment_bcoffee.bright_coffee.shop_caseanalysis
+
+GROUP BY  transaction_date,
+          Day_name,
+          Month_name,
+          purchase_time, -- Grouping by formatted time
+          day_of_Month,
+          day_class,
+          Time_of_Day,
+          store_location,
+          Product_category,
+          product_type,
+          Product_detail;
